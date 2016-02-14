@@ -7,19 +7,23 @@ env.user = "vagrant"
 env.password='vagrant'
 #env.hosts = ['']
 #env.passwords={'tatum@192.168.0.107:22': 'abc123_', 'vagrant@localhost:22': 'vagrant'}
+git_folder = "/home/vagrant/github/resource"
 
 def run_cmd(cmd):
 	run(cmd)
 
 
 def git_checkout():
-	run("cd /home/vagrant/github/study && git checkout -- .")
+	with cd(git_folder):
+		run("checkout -- .")
 
 def git_pull():
-	run("cd /home/vagrant/github/study && git pull")
+	with cd(git_folder):
+		run("git pull")
 
 def git_checkout_pull():
-	run("cd /home/vagrant/github/study && git checkout -- . && git pull")
+	with cd(git_folder):
+		run("git checkout -- . && git pull")
 
 def get_host_spec():
   get_cpu()

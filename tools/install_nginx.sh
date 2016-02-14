@@ -40,12 +40,12 @@ show_progress "Nginx is installed successfully"
 
 show_progress "Add nginx to PATH"
 {
-    cat /etc/bashrc | grep "PATH=$PATH:/usr/local/nginx/sbin"
+    cat /etc/bashrc | grep "PATH=\$PATH:/usr/local/nginx/sbin"
     if [ $? == 0 ]
     then
         echo "/usr/local/nginx/sbin is already in path, SKIP"
     else
-        echo 'export PATH=$PATH:/usr/local/nginx/sbin' | sudo tee -a /etc/bashrc
+        echo 'export PATH=$PATH:/usr/local/nginx/sbin:/usr/local/nginx/bin' | sudo tee -a /etc/bashrc
     fi
 }
 source /etc/bashrc
