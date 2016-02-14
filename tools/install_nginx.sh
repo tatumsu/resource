@@ -38,6 +38,16 @@ show_progress "Confiugre, make and install nginx"
 }
 show_progress "Nginx is installed successfully"
 
+show_progress "Setup nginx as service"
+sudo cp nginx /etc/init.d/
+sudo chown root:root /etc/init.d/nginx
+sudo chmod 0755 /etc/init.d/nginx
+sudo chkconfig --add nginx
+sudo chkconfig --level 2345 nginx on
+
+show_progress "start up nginx service"
+sudo service nginx start
+
 show_progress "Add nginx to PATH"
 {
     cat /etc/bashrc | grep "PATH=\$PATH:/usr/local/nginx/sbin"
