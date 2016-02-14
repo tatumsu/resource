@@ -1,0 +1,12 @@
+Follow the steps below to install hadoop and related components (this is required/common for all nodes):
+1. edit configure.sh and confgure the values base on target deployment environment
+2. edit host_list_xxx.sh to configure the hostname and IP
+3. run install_hadoop_common.sh with a user who has sudo privilege 
+
+
+After the above is done, execute following additional steps based on the node type
+-----------For named node----------
+1. run install_hadoop_namenode.sh
+
+-----------For datanode----------
+1. run install_hadoop_datanode.sh
