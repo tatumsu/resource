@@ -5,6 +5,7 @@ HADOOP_SCRIPT_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )"
 source "$HADOOP_SCRIPT_FOLDER/../common.sh"
 source "$HADOOP_SCRIPT_FOLDER/configure.sh"
 
+
 yum list installed | grep $JDK_PACKAGE
 if [ ! $? == 0 ]
 then
@@ -104,20 +105,17 @@ then
 fi
 sudo sed -i "/export HADOOP_ROOT=/d" /etc/profile.d/hadoop.sh
 sudo sed -i "/export HADOOP_USER=/d" /etc/profile.d/hadoop.sh
-append_to_file_once /etc/profile.d/hadoop.sh "export HADOOP_HOME=${HADOOP_HOME}"
+append_to_file_once /etc/profile.d/hadoop.sh "export JAVA_HOME=${JAVA_HOME}"
+append_to_file_once /etc/profile.d/hadoop.sh "export HADOOP_HOME=${HADOOP_ROOT}/hadoop"
 append_to_file_once /etc/profile.d/hadoop.sh "export HADOOP_USER=${HADOOP_USER}"
+append_to_file_once /etc/profile.d/hadoop.sh "export PATH=\$PATH:\$HADOOP_HOME/sbin:\$HADOOP_HOME/bin"
 
 
 show_progress "Untar hadoop-${HADOOP_VERSION}.tar.gz to ${HADOOP_HOME}"
 cd ${HADOOP_ROOT}
 sudo tar -xzvf hadoop-${HADOOP_VERSION}.tar.gz > /dev/null
-sudo chown -R ${HADOOP_USER}:${HADOOP_USER} /opt/hadoop
-
-if [ $SETUP_HOST == "yes" ]
-then
-	show_progress "Setup IP to host name mapping in /etc/hosts"
-	${HADOOP_SCRIPT_FOLDER}/setup_host.sh
-fi
+sudo ln -sf "${HADOOP_HOME}" "hadoop"
+sudo chown -R ${HADOOP_USER}:${HADOOP_USER} ${HADOOP_ROOT}
 
 show_progress "Copy hadoop config files"
 ${HADOOP_SCRIPT_FOLDER}/copy_hadoop_config.sh
@@ -127,10 +125,12 @@ echo "--------------------------------------------------------------------------
 echo "- Congratulations. Your hadoop common parts have been installed successfully.                       -" 
 echo "-                                                                                                   -"
 echo "- The next step(s):                                                                                 -"
-echo "-     You may need to run 'source ~/.bashrc' to enable newly set environment variable               -"
+echo "-     You may need to run 'source /etc/profile.d/hadoop.sh' to enable newly set environment variable-"
 echo "-     You need run node type specific installation script to complete the installation              -"
-echo "-                                                                                                   -"
-echo "- Refers to README for more detail                                                                  -"
+echo "-     Login to name node as ${HADOOP_USER} and:                                                     -"
+echo "-         1). Run "hdfs namenode -format" to format DFS                                             -"
+echo "-         2). Run "start-dfs.sh" to start dfs                                                       -"
+echo "-     Login to resource manager as ${HADOOP_USER} and run "start-yarn.sh" start yarn                -"
 echo "-----------------------------------------------------------------------------------------------------"
 echo -e "\e[0m"
 

@@ -16,7 +16,7 @@
 
   <property>
     <name>yarn.resourcemanager.hostname</name>
-    <value>rm.hadoop.dev</value>
+    <value>vm.hadoop.local</value>
   </property>
 
   <property>
@@ -31,7 +31,7 @@
 
   <property>
     <name>yarn.log.server.url</name>
-    <value>http://jh.hadoop.dev:19888/jobhistory/logs/</value>
+    <value>http://vm.hadoop.local:19888/jobhistory/logs/</value>
   </property>
 
 </configuration>

@@ -8,6 +8,7 @@ OOZIE_ROOT=/opt/oozie
 OOZIE_VERSION=4.2.0
 
 OOZIE_CONFIG_SCRIPT_FOLDER=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd )
+
 #-------------------- The following configuration probably does not need to be changed--------------------------#
 
 DEBUG=yes

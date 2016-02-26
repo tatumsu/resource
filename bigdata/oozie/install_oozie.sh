@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+#set -e
 
 pushd .
 
@@ -14,10 +14,20 @@ source ~/.bashrc
 show_progress "Oozie installation environment setting"
 set | sort | grep -E "OOZIE|HADOOP"
 
+MAVEN_INSTALLED='no'
 mvn -version > /dev/null 2>&1
 if [ $? == 0 ]
 then
+	MAVEN_INSTALLED='yes'
 	EXISTING_MAVEN_VERSION=$(get_version "$(mvn -version | grep "Apache Maven")")
+else
+	$MAVEN_HOME/bin/mvn -version > /dev/null 2>&1 && MAVEN_INSTALLED='yes'
+	alias mvn="$MAVEN_HOME/bin/mvn"
+	EXISTING_MAVEN_VERSION=$(get_version "$($MAVEN_HOME/bin/mvn -version | grep "Apache Maven")")
+fi
+
+if [ $MAVEN_INSTALLED == 'yes' ]
+then
 	debug "EXISTING_MAVEN_VERSION=$EXISTING_MAVEN_VERSION"
 	EXISTING_MAVEN_VERSION_NUMBER=$(convert_version_to_number ${EXISTING_MAVEN_VERSION})
 	debug "EXISTING_MAVEN_VERSION_NUMBER=$EXISTING_MAVEN_VERSION_NUMBER"
@@ -58,10 +68,11 @@ else
 	
 	show_progress "Untar ${MAVEN_TAR_FILE} to ${pwd}"
 	sudo tar xzvf "${MAVEN_TAR_FILE}" > /dev/null
-	sudo sed -i "/export M2_HOME=/d" /etc/bashrc
-	append_to_file_once /etc/bashrc "export M2_HOME=/opt/maven/apache-maven-${MAVEN_VERSION}"
-	append_to_file_once /etc/bashrc "export PATH=\$PATH:\$M2_HOME/bin"
 fi
+
+sudo ln -fs "${MAVEN_HOME}" "${MAVEN_ROOT}/maven"
+append_to_file_once /etc/profile.d/hadoop.sh "export M2_HOME=${MAVEN_ROOT}/maven"
+append_to_file_once /etc/profile.d/hadoop.sh "export PATH=\$PATH:\$M2_HOME/bin"
 
 # No matter how is maven installed, always use the specified repository folder
 show_progress "Change ${MAVEN_HOME}/conf/settings.xml to set localRepository to ${MAVEN_REPO_FOLDER}"
@@ -101,7 +112,7 @@ debug "OOZIE_DIST_FOLDER=$OOZIE_DIST_FOLDER"
 OOZIE_SKIP_BUILD=no
 if [ -f "${OOZIE_DIST_FOLDER}/oozie-${OOZIE_VERSION}-distro.tar.gz" ]
 then
-	get_install_option "OOZIE_SKIP_BUILD" "y|n" "${OOZIE_DIST_FOLDER}/oozie-${OOZIE_VERSION}-distro.tar.gz exist, do you want to skip build? ([y]|n)" "y" 30
+	get_install_option "OOZIE_SKIP_BUILD" "y|n" "${OOZIE_DIST_FOLDER}/oozie-${OOZIE_VERSION}-distro.tar.gz exist, do you want to skip build and use the existing build result directly? ([y]|n)" "y" 30
 fi
 
 if [ $OOZIE_SKIP_BUILD == "yes" ] || [ $OOZIE_SKIP_BUILD == "y" ]
@@ -134,7 +145,7 @@ sudo cp -r "${OOZIE_DIST_FOLDER}/oozie-${OOZIE_VERSION}-distro.tar.gz" "${OOZIE_
 cd ${OOZIE_ROOT}
 
 show_progress "Untar ${OOZIE_ROOT}/oozie-${OOZIE_VERSION}-distro.tar.gz" > /dev/null
-sudo tar xzvf "oozie-${OOZIE_VERSION}-distro.tar.gz"
+sudo tar xzvf "oozie-${OOZIE_VERSION}-distro.tar.gz" > /dev/null
 
 cd "${OOZIE_HOME}"
 
@@ -143,8 +154,6 @@ then
 	show_progress "Create folder ${OOZIE_HOME}/libext"
 	sudo mkdir libext
 fi
-
-# wget http://dev.sencha.com/deploy/ext-2.2.zip
 
 if [ ! -f libext/ext-2.2.zip ]
 then
@@ -165,11 +174,13 @@ sudo -i "${OOZIE_HOME}/bin/oozie-setup.sh" prepare-war
 #  
 # show_progress "Create oozie DB"
 # sudo -i "${OOZIE_HOME}/bin/ooziedb.sh" create -sqlfile oozie.sql -run
- 
-sudo ln -fs "${OOZIE_HOME}" "${OOZIE_ROOT}/oozie"
+
+cd ${OOZIE_ROOT} 
+sudo ln -fs "${OOZIE_HOME}" "/oozie"
 sudo chown -R ${HADOOP_USER}:${HADOOP_USER} "${OOZIE_ROOT}"
 
-append_to_file_once "export OOZIE_HOME=${OOZIE_ROOT}/oozie" /etc/profile.d/hadoop.sh
+append_to_file_once /etc/profile.d/hadoop.sh "export OOZIE_HOME=$OOZIE_HOME"
+append_to_file_once /etc/profile.d/hadoop.sh "export PATH=\$PATH:\$OOZIE_HOME/bin"
 popd
 
 echo -e "\e[32m"
@@ -178,10 +189,10 @@ echo "- Congratulations. Your oozie have been installed successfully.           
 echo "-                                                                                                         -"
 echo "- The next step(s):                                                                                       -"
 echo "-     login as hadoop user, and then:                                                                     -"
-echo "-         1) run '\${OOZIE_HOME}/bin/oozie-setup.sh sharelib create -fs hdfs://nn.hadoop.local:8020 to    -"
+echo "-         1) run '\${OOZIE_HOME}/bin/oozie-setup.sh sharelib create -fs hdfs://${HADOOP_NN_HOST}:8020' to -"
 echo "-            upload shared lib to dfs. replace nn.hadoop.local according to your name node ip/hostname.   -"
 echo "-         2) run '\${OOZIE_HOME}/bin/ooziedb.sh create -sqlfile oozie.sql -run' to create oozie DB        -"
-echo "-         3) run '\${OOZIE_HOME}/bin/oozied.sh start to startup oozie server                              -"
+echo "-         3) run '\${OOZIE_HOME}/bin/oozied.sh start' to startup oozie server                             -"
 echo "-                                                                                                         -"
 echo "- Refers to README for more detail                                                                        -"
 echo "-----------------------------------------------------------------------------------------------------------"
