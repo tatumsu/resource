@@ -33,37 +33,33 @@ vercomp () {
     return 0
 }
 
+current_user=$(whoami)
+
 show_progress 'Check OS version'
 vercomp $(uname -r | cut -d '-' -f 1) 3.10.0
 if [ $? == 2 ];then
-	show_error 'Only CentOS 7 and above is supported'
-	exit 1
+    show_error 'Only CentOS 7 and above is supported'
+    exit 1
 fi
 
 show_progress 'Update system to latest'
 sudo yum -y update
 
-show_progress 'Enable docker repository'
-sudo tee /etc/yum.repos.d/docker.repo <<-'EOF'
-[dockerrepo]
-name=Docker Repository
-baseurl=https://yum.dockerproject.org/repo/main/centos/$releasever/
-enabled=1
-gpgcheck=1
-gpgkey=https://yum.dockerproject.org/gpg
-EOF
+curl https://get.docker.com > /tmp/install.sh
+chmod +x /tmp/install.sh
+/tmp/install.sh
 
 show_progress 'Install docker-engine'
 sudo yum -y install docker-engine
 
 show_progress 'Enable docker service when startup'
-sudo chkconfig docker on
+sudo systemctl enable docker
 
 show_progress 'Startup docker'
-sudo service docker start
+sudo systemctl start docker
 
-show_progress 'Create docker group and add vagrant as member'
-sudo usermod -aG docker vagrant
+show_progress 'Create docker group and add current user as member'
+sudo usermod -aG docker $current_user
 
 show_progress 'Verify docker installation by running hello-world'
 sudo docker run hello-world
