@@ -1,0 +1,25 @@
+version: "2"
+services:
+  docker-registry:
+    restart: always
+    image: "registry:2"
+    ports:
+      - 443:5000
+    volumes:
+      - ./auth:/auth
+      - ./certs:/certs
+      # - ./config.yml:/etc/docker/registry/config.yml
+    environment:
+      - REGISTRY_AUTH=htpasswd
+      - REGISTRY_AUTH_HTPASSWD_REALM="docker.tatum.help"
+      - REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd
+      - REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt
+      - REGISTRY_HTTP_TLS_KEY=/certs/domain.key
+      - REGISTRY_HEALTH_STORAGEDRIVER_INTERVAL=3m
+      - REGISTRY_STORAGE=oss
+      - REGISTRY_STORAGE_OSS_ACCESSKEYID=gxAzbBXdd0DNhVQc
+      - REGISTRY_STORAGE_OSS_ACCESSKEYSECRET=5JCc6PDVZ72ArdLM2VpNRmoQxExUKO
+      - REGISTRY_STORAGE_OSS_REGION=oss-us-west-1
+      - REGISTRY_STORAGE_OSS_BUCKET=tatum-docker-registry
+      - REGISTRY_STORAGE_OSS_INTERNAL=true
+      - REGISTRY_STORAGE_OSS_SECURE=false    
